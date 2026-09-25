@@ -115,7 +115,6 @@ quick demo; the version at the repo root is the real project.
 
 - [AI Phishing Detection](https://github.com/blkmonday/AI-Phishing-Detection)
 - [Building a Virtual HomeLab on macOS](https://github.com/blkmonday/Building-A-Virtual-HomeLab-on-MacOS)
-- [Cybersecurity Projects](https://github.com/blkmonday/Cybersecurity-projects)
 
 ---
 
