@@ -1,117 +1,124 @@
-# ClassConnect — Southern University A&M College
+# ClassConnect
 
-A campus navigation and schedule management tool built for Southern University students (Jaguars!).
+A campus navigation and schedule management tool for Southern University A&M College students.
 
-## What It Does
+Java backend serving a REST API, with a multi-page frontend for login, registration, schedule
+management, campus mapping, and class alerts.
 
-- **Dashboard** — See today's classes, next class info, and quick stats
-- **My Schedule** — View your weekly class schedule by day (Mon–Fri), add/drop classes
-- **Campus Map** — Interactive SVG map of Southern University buildings with your class locations highlighted
-- **Class Finder** — Search the Spring 2026 course catalog by name, code, department, or instructor
-- **Profile** — View your student info, GPA, credits, and advisor
+Built as a Computer Science final project at Southern University A&M College.
 
 ---
 
-## Project Structure
+## Architecture
 
 ```
-ClassConnect/
-├── backend/
-│   ├── Main.java         ← Entry point (console app)
-│   ├── Database.java     ← Course catalog, buildings, student data
-│   ├── Course.java       ← Course model
-│   ├── Building.java     ← Building model
-│   └── Student.java      ← Student model
-├── frontend/
-│   └── index.html        ← Full web application (open in browser)
-└── README.md
+┌─────────────────────┐         ┌──────────────────────────────┐
+│   frontend/         │         │   backend/ (Java, :8080)     │
+│                     │         │                              │
+│  login.html         │  fetch  │  POST /api/login             │
+│  register.html      ├────────►│  POST /api/register          │
+│  schedule.html      │  JSON   │  GET  /api/schedule?userId=  │
+│  alerts.html        │         │  POST /api/schedule          │
+│  map.html           │         │  GET  /api/alerts            │
+│  classfinder.html   │         │  GET  /api/proxy-image?url=  │
+│  home.html          │         │                              │
+│   └── js/app.js     │         │   └── file-backed storage    │
+└─────────────────────┘         └──────────────────────────────┘
+```
+
+Built on `com.sun.net.httpserver.HttpServer` with a cached thread pool. Data persists to flat
+files under `backend/data/`.
+
+### Layout
+
+```
+backend/
+├── pom.xml                              ← Maven, Java 21, Gson 2.10.1
+├── lib/gson-2.10.1.jar                  ← vendored for the no-Maven fallback
+├── data/                                ← flat-file store (*.example.json committed)
+└── src/main/java/backend/
+    ├── Main.java                        ← server bootstrap + request handlers
+    ├── Database.java                    ← load/save flat files
+    ├── controllers/                     ← Login, Registration, Alert, Map, Schedule
+    └── models/                          ← User, ClassInfo, Schedule, Alert
+
+frontend/                                ← static pages, opened directly in a browser
+└── js/app.js                            ← all fetch calls to localhost:8080
+
+v1-console-demo/                         ← earlier version, see below
 ```
 
 ---
 
-## How to Run
+## Running it
 
-### Option 1: Web Frontend (Recommended — No Setup Needed)
+### 1. Start the backend
 
-1. Open the `frontend/index.html` file in any web browser
-   - In VS Code: right-click `index.html` → **"Open with Live Server"** (if you have the Live Server extension)
-   - Or just double-click the file in your file explorer
-2. Enter anything to sign in (it's a demo)
-3. Explore: Dashboard, Schedule, Campus Map, Class Finder, Profile
+```bash
+./build.sh
+```
 
-### Option 2: Java Backend (Console App)
+Prefers Maven; falls back to `javac` with the vendored Gson jar if `mvn` isn't installed. Either
+way it compiles and launches the server, which listens on `http://localhost:8080`.
 
-#### In VS Code:
+### 2. Open the frontend
 
-1. **Install the Java Extension Pack** if you haven't:
-   - Open VS Code → Extensions (Ctrl+Shift+X) → Search **"Extension Pack for Java"** → Install
+Open `frontend/login.html` in a browser. The pages are static and call the API directly, so no
+web server is needed for the frontend.
 
-2. **Open the backend folder**:
-   - File → Open Folder → select the `backend/` folder
+### 3. Seed the data files
 
-3. **Run it**:
-   - Open `Main.java`
-   - Click the **▶ Run** button that appears above `public static void main`
-   - OR right-click in the file → **"Run Java"**
-   - OR open the terminal (Ctrl+`) and type:
-     ```
-     cd backend
-     javac *.java
-     java Main
-     ```
+The runtime data files are gitignored because the working copy held real credentials. Copy the
+examples before first run:
 
-4. **Use the menu**:
-   - Press Enter at the login prompt for the demo account
-   - Type a number (1–7) to navigate, 0 to exit
+```bash
+cp backend/data/users.example.json backend/data/users.json
+cp backend/data/schedule.example.json backend/data/schedule.json
+```
 
-#### Requirements:
-- **Java 11+** (JDK) installed — download from https://adoptium.net if needed
-- Verify with: `java --version` in your terminal
+Requires JDK 21+.
 
 ---
 
-## Features
+## Known security issues
 
-| Feature | Frontend (HTML) | Backend (Java) |
-|---------|:-:|:-:|
-| Login screen | ✅ | ✅ |
-| View schedule by day | ✅ | ✅ |
-| Add/drop classes | ✅ | ✅ |
-| Search course catalog | ✅ | ✅ |
-| Campus map | ✅ (interactive SVG) | ✅ (ASCII art) |
-| Find buildings | ✅ | ✅ |
-| Student profile | ✅ | ✅ |
-| Next class alert | ✅ | — |
-| Toast notifications | ✅ | — |
+This is coursework, not production software. These are documented deliberately rather than quietly
+left in — identifying them is part of the point.
 
----
+| Issue | Where | Detail |
+|---|---|---|
+| **SSRF** | `Main.handleProxyImage` | `/api/proxy-image?url=` fetches any caller-supplied URL with no scheme or host allowlist. A request can reach `localhost`, LAN hosts, or cloud metadata endpoints, and the upstream `Content-Type` is echoed back, so it proxies arbitrary content rather than only images. Needs a domain allowlist and a block on private/loopback address ranges. |
+| **Plaintext passwords** | `Database`, `LoginController` | Passwords are stored and compared as cleartext. Should be salted and hashed (bcrypt/Argon2), with a constant-time comparison. |
+| **Wide-open CORS** | `Main.addCors` | `Access-Control-Allow-Origin: *` on every endpoint means any site a user visits can call this API while the server runs locally. |
+| **No session management** | — | The client tracks the logged-in user and passes `userId` on requests, so any user's schedule can be read or written by changing the parameter. Needs server-side sessions or signed tokens. |
+| **Hand-rolled JSON parsing** | `Main.extractField` | Substring-based field extraction rather than Gson, despite Gson being a dependency. Fragile and easy to confuse with crafted input. |
 
-## Tech Stack
-
-- **Frontend**: HTML5, CSS3, vanilla JavaScript (no frameworks, single-file)
-- **Backend**: Java 11+ (no external dependencies)
-- **Data**: In-memory (no database required)
+Run it only on a trusted local network.
 
 ---
 
-## Southern University Buildings Included
+## v1 — console + single-file demo
 
-- Pinchback Hall (PH) — Science & Engineering
-- T.H. Harris Hall (TH) — College of Business
-- Stewart Hall (SH) — Humanities
-- Smith-Brown Memorial Union (SB) — Student Life
-- Clark Activity Center (CA) — Athletics
-- A.C. Mumford Stadium (MS) — Football
-- John B. Cade Library (LB) — Library
-- Lee Hall (LH) — Fine Arts
-- Mechanical Engineering Bldg (ME)
-- Nursing Building (NB)
-- J.S. Clark Admin Building (AD)
-- Seymour Gymnasium (SG)
-- Augustus C. Blanks Hall (BH) — CS Dept
-- Pennington Hall (PN) — Residence
-- Totty Hall (TT) — Residence
+[`v1-console-demo/`](v1-console-demo/) holds the earlier implementation, kept because it still
+works and needs no setup at all:
+
+- **`index.html`** — a complete self-contained web app (dashboard, schedule, SVG campus map, class
+  finder, profile). Just open it in a browser; no backend required.
+- **`Main.java`** and friends — a `Scanner`-driven console version with a hardcoded course catalog.
+
+See [`v1-console-demo/README.md`](v1-console-demo/README.md) for its own instructions. Useful as a
+quick demo; the version at the repo root is the real project.
 
 ---
 
-*Built for Southern University A&M College — Go Jaguars! 🐆💛💙*
+## Related
+
+- [AI Phishing Detection](https://github.com/blkmonday/AI-Phishing-Detection)
+- [Building a Virtual HomeLab on macOS](https://github.com/blkmonday/Building-A-Virtual-HomeLab-on-MacOS)
+- [Cybersecurity Projects](https://github.com/blkmonday/Cybersecurity-projects)
+
+---
+
+## License
+
+See [LICENSE](LICENSE).

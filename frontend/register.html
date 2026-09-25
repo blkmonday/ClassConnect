@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+<title>Register</title>
+</head>
+<body>
+<div class="navbar"><span class="brand">Class Connect</span><a href="home.html">Home</a><a href="login.html">Login</a><a href="register.html">Register</a><a href="map.html">Map</a><a href="schedule.html">Schedule</a><a href="alerts.html">Alerts</a></div>
+<div class="container">
+  <h1>Register <span class="accent">Account</span></h1>
+  <div id="reg-msg" class="error"></div>
+  <label for="reg-email">Email (sus.edu)</label>
+  <input id="reg-email" placeholder="your.name@sus.edu">
+  <label for="reg-id">ID</label>
+  <input id="reg-id" placeholder="Choose an ID">
+  <label for="reg-pw">Password</label>
+  <input id="reg-pw" type="password" placeholder="Choose a password">
+  <label for="reg-confirm">Confirm Password</label>
+  <input id="reg-confirm" type="password" placeholder="Re-enter password">
+  <button onclick="register()">Create Account</button>
+</div>
+<script src="js/app.js"></script>
+</body>
+</html>

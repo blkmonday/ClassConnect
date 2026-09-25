@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+<title>Map</title>
+<link rel="icon" href="http://localhost:8080/api/proxy-image?url=https%3A%2F%2Fd1dxs113ar9ebd.cloudfront.net%2F225batonrouge%2F2021%2F02%2FSU-LOGO.png">
+</head>
+<body>
+<div class="navbar"><span class="brand">Class Connect</span><a href="home.html">Home</a><a href="login.html">Login</a><a href="register.html">Register</a><a href="map.html">Map</a><a href="schedule.html">Schedule</a><a href="alerts.html">Alerts</a></div>
+<section class="hero">
+  <div class="wrap">
+    <img alt="SU logo" src="http://localhost:8080/api/proxy-image?url=https%3A%2F%2Fd1dxs113ar9ebd.cloudfront.net%2F225batonrouge%2F2021%2F02%2FSU-LOGO.png">
+    <div>
+      <h1>Campus Map</h1>
+      <p>Pan around and use pins to identify key buildings on campus.</p>
+      <div class="cta">
+        <a class="btn secondary" href="alerts.html">View Alerts</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="map-wrap">
+  <img id="campus-map" class="map-img" alt="Campus map" src="">
+  <div class="pin" style="top:45%;left:52%" title="Library"></div>
+  <div class="pin" style="top:60%;left:40%" title="Science Hall"></div>
+  <div class="pin" style="top:70%;left:65%" title="Stadium"></div>
+</div>
+<script>
+  const params = new URLSearchParams(location.search);
+  const img = params.get('img');
+  if(img){
+    const isRemote = /^https?:\/\//i.test(img);
+    document.getElementById('campus-map').src = isRemote ? `http://localhost:8080/api/proxy-image?url=${encodeURIComponent(img)}` : img;
+  }
+  if(!img){
+    const def = 'http://localhost:8080/api/proxy-image?url=' + encodeURIComponent('https://manning.xyz/sites/default/files/projects/2020-04/stacks-image-1048681.jpg');
+    document.getElementById('campus-map').src = def;
+  }
+</script>
+</body>
+</html>

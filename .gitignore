@@ -1,0 +1,18 @@
+# --- Runtime user data: contains real account credentials, never commit ---
+backend/backend/
+backend/data/users.json
+backend/data/users.txt
+backend/data/schedule.json
+*.local.json
+
+# --- Build output ---
+backend/out/
+backend/target/
+*.class
+
+# --- macOS ---
+.DS_Store
+
+# --- Editor ---
+.idea/
+*.iml
